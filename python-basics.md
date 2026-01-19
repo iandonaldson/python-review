@@ -22,6 +22,7 @@ A comprehensive guide covering fundamental Python concepts with examples and out
 16. [For Loops](#for-loops)
 17. [Functions](#functions)
     - [Decorators](#decorators)
+    - [Generators](#generators)
 18. [Lambda](#lambda)
 19. [Arrays](#arrays)
 20. [Classes/Objects](#classesobjects)
@@ -2194,6 +2195,261 @@ Fibonacci(30): 832040
 ```
 
 Decorators are fundamental in modern Python development, especially in web frameworks like **FastAPI** and **Flask** where they define routes, handle authentication, validate inputs, and manage dependencies. They provide a clean, readable way to add functionality without modifying the original function code.
+
+### Generators
+
+Generators are special functions that return an iterator and generate values lazily (one at a time) using the `yield` keyword instead of `return`. They are memory-efficient for large datasets since they don't store all values in memory at once.
+
+#### Basic Generator
+
+```python
+def count_up_to(n):
+    count = 1
+    while count <= n:
+        yield count
+        count += 1
+
+# Using the generator
+counter = count_up_to(5)
+for num in counter:
+    print(num)
+```
+
+**Output:**
+```
+1
+2
+3
+4
+5
+```
+
+#### Generator vs Regular Function
+
+```python
+# Regular function - stores all values in memory
+def get_squares_list(n):
+    result = []
+    for i in range(n):
+        result.append(i ** 2)
+    return result
+
+# Generator - yields values one at a time
+def get_squares_generator(n):
+    for i in range(n):
+        yield i ** 2
+
+# Both produce same results, but generator uses less memory
+print("List:", get_squares_list(5))
+print("Generator:", list(get_squares_generator(5)))
+```
+
+**Output:**
+```
+List: [0, 1, 4, 9, 16]
+Generator: [0, 1, 4, 9, 16]
+```
+
+#### Generator with next()
+
+```python
+def fibonacci_generator():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+fib = fibonacci_generator()
+print(next(fib))  # 0
+print(next(fib))  # 1
+print(next(fib))  # 1
+print(next(fib))  # 2
+print(next(fib))  # 3
+```
+
+**Output:**
+```
+0
+1
+1
+2
+3
+```
+
+#### Generator Expressions
+
+```python
+# Similar to list comprehension but with parentheses
+squares_gen = (x ** 2 for x in range(5))
+print(type(squares_gen))
+print(list(squares_gen))
+
+# Memory efficient for large datasets
+sum_of_squares = sum(x ** 2 for x in range(1000000))
+print(f"Sum: {sum_of_squares}")
+```
+
+**Output:**
+```
+<class 'generator'>
+[0, 1, 4, 9, 16]
+Sum: 333332833333500000
+```
+
+#### Common Use Cases
+
+**1. Processing Large Files**
+
+```python
+def read_large_file(file_path):
+    """Read file line by line without loading entire file into memory"""
+    with open(file_path, 'r') as file:
+        for line in file:
+            yield line.strip()
+
+# Usage: processes one line at a time
+# for line in read_large_file('huge_file.txt'):
+#     process(line)
+```
+
+**2. Infinite Sequences**
+
+```python
+def infinite_counter(start=0):
+    """Generate infinite sequence of numbers"""
+    num = start
+    while True:
+        yield num
+        num += 1
+
+# Use with a limit
+counter = infinite_counter(10)
+for _ in range(5):
+    print(next(counter))
+```
+
+**Output:**
+```
+10
+11
+12
+13
+14
+```
+
+**3. Data Pipeline/Streaming**
+
+```python
+def read_data():
+    """Simulate reading data"""
+    for i in range(5):
+        yield i
+
+def filter_even(data):
+    """Filter even numbers"""
+    for item in data:
+        if item % 2 == 0:
+            yield item
+
+def multiply_by_10(data):
+    """Multiply by 10"""
+    for item in data:
+        yield item * 10
+
+# Chain generators together
+pipeline = multiply_by_10(filter_even(read_data()))
+print(list(pipeline))
+```
+
+**Output:**
+```
+[0, 20, 40]
+```
+
+**4. Batch Processing**
+
+```python
+def batch_generator(data, batch_size):
+    """Yield data in batches"""
+    for i in range(0, len(data), batch_size):
+        yield data[i:i + batch_size]
+
+data = list(range(10))
+for batch in batch_generator(data, 3):
+    print(f"Processing batch: {batch}")
+```
+
+**Output:**
+```
+Processing batch: [0, 1, 2]
+Processing batch: [3, 4, 5]
+Processing batch: [6, 7, 8]
+Processing batch: [9]
+```
+
+**5. Database Query Results**
+
+```python
+def fetch_users_batch(batch_size=100):
+    """Simulate fetching users from database in batches"""
+    offset = 0
+    while True:
+        # Simulate: users = db.query().limit(batch_size).offset(offset)
+        users = list(range(offset, min(offset + batch_size, 500)))
+        if not users:
+            break
+        for user in users:
+            yield user
+        offset += batch_size
+
+# Process users one at a time without loading all 500 into memory
+count = 0
+for user in fetch_users_batch():
+    count += 1
+    if count <= 5:  # Just show first 5
+        print(f"User ID: {user}")
+print(f"Total users processed: {count}")
+```
+
+**Output:**
+```
+User ID: 0
+User ID: 1
+User ID: 2
+User ID: 3
+User ID: 4
+Total users processed: 500
+```
+
+**6. Web Scraping with Pagination**
+
+```python
+def scrape_pages(max_pages=5):
+    """Generator for scraping paginated content"""
+    for page in range(1, max_pages + 1):
+        # Simulate fetching page
+        yield f"Data from page {page}"
+
+for page_data in scrape_pages(3):
+    print(page_data)
+```
+
+**Output:**
+```
+Data from page 1
+Data from page 2
+Data from page 3
+```
+
+#### Key Benefits
+
+- **Memory Efficiency**: Only one item exists in memory at a time
+- **Lazy Evaluation**: Values are generated on-demand
+- **Infinite Sequences**: Can represent unbounded data streams
+- **Pipeline Processing**: Easy to chain multiple operations
+- **Better Performance**: For large datasets, avoids creating intermediate lists
+
+Generators are essential for handling large datasets, streaming data, ETL pipelines, and any scenario where loading all data into memory would be impractical or impossible. They're commonly used in data processing, web scraping, file processing, and machine learning data loaders.
 
 ---
 
