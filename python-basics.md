@@ -21,6 +21,7 @@ A comprehensive guide covering fundamental Python concepts with examples and out
 15. [While Loops](#while-loops)
 16. [For Loops](#for-loops)
 17. [Functions](#functions)
+    - [Decorators](#decorators)
 18. [Lambda](#lambda)
 19. [Arrays](#arrays)
 20. [Classes/Objects](#classesobjects)
@@ -1945,6 +1946,254 @@ Fibonacci of 7: 13
 1
 Done!
 ```
+
+### Decorators
+
+Decorators are a powerful feature that allows you to modify or enhance functions without changing their code. They use the `@decorator_name` syntax and are essentially functions that wrap other functions.
+
+#### Basic Decorator
+
+```python
+def uppercase_decorator(func):
+    def wrapper():
+        result = func()
+        return result.upper()
+    return wrapper
+
+@uppercase_decorator
+def greet():
+    return "hello, world!"
+
+print(greet())
+```
+
+**Output:**
+```
+HELLO, WORLD!
+```
+
+#### Decorator with Arguments
+
+```python
+def repeat(times):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
+
+@repeat(3)
+def say_hello(name):
+    print(f"Hello, {name}!")
+
+say_hello("Alice")
+```
+
+**Output:**
+```
+Hello, Alice!
+Hello, Alice!
+Hello, Alice!
+```
+
+#### Preserving Function Metadata
+
+```python
+from functools import wraps
+
+def my_decorator(func):
+    @wraps(func)  # Preserves original function's metadata
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+    return wrapper
+
+@my_decorator
+def add(a, b):
+    """Adds two numbers"""
+    return a + b
+
+print(add(3, 5))
+print(f"Function name: {add.__name__}")
+print(f"Function doc: {add.__doc__}")
+```
+
+**Output:**
+```
+Before function call
+After function call
+8
+Function name: add
+Function doc: Adds two numbers
+```
+
+#### Common Use Cases
+
+Decorators are extensively used in modern Python frameworks and applications:
+
+**1. Web Frameworks (FastAPI, Flask)**
+
+```python
+# FastAPI example - defining routes
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+@app.post("/items/{item_id}")
+def create_item(item_id: int):
+    return {"item_id": item_id}
+
+# Flask example - defining routes
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Welcome!"
+
+@app.route("/users/<username>")
+def show_user(username):
+    return f"User: {username}"
+```
+
+**2. Property Decorators**
+
+```python
+class Person:
+    def __init__(self, name, age):
+        self._name = name
+        self._age = age
+    
+    @property
+    def age(self):
+        return self._age
+    
+    @age.setter
+    def age(self, value):
+        if value < 0:
+            raise ValueError("Age cannot be negative")
+        self._age = value
+
+person = Person("Alice", 30)
+print(f"Age: {person.age}")
+person.age = 31
+print(f"New age: {person.age}")
+```
+
+**Output:**
+```
+Age: 30
+New age: 31
+```
+
+**3. Class and Static Methods**
+
+```python
+class MathOperations:
+    @staticmethod
+    def add(a, b):
+        return a + b
+    
+    @classmethod
+    def multiply(cls, a, b):
+        print(f"Called from {cls.__name__}")
+        return a * b
+
+print(f"Sum: {MathOperations.add(3, 5)}")
+print(f"Product: {MathOperations.multiply(3, 5)}")
+```
+
+**Output:**
+```
+Sum: 8
+Called from MathOperations
+Product: 15
+```
+
+**4. Authentication and Authorization**
+
+```python
+def require_auth(func):
+    def wrapper(user, *args, **kwargs):
+        if not user.get("authenticated"):
+            return "Access denied"
+        return func(user, *args, **kwargs)
+    return wrapper
+
+@require_auth
+def view_profile(user):
+    return f"Welcome, {user['name']}!"
+
+user1 = {"name": "Alice", "authenticated": True}
+user2 = {"name": "Bob", "authenticated": False}
+
+print(view_profile(user1))
+print(view_profile(user2))
+```
+
+**Output:**
+```
+Welcome, Alice!
+Access denied
+```
+
+**5. Timing and Performance Monitoring**
+
+```python
+import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} took {end - start:.4f} seconds")
+        return result
+    return wrapper
+
+@timer
+def slow_function():
+    time.sleep(1)
+    return "Done"
+
+slow_function()
+```
+
+**Output:**
+```
+slow_function took 1.0001 seconds
+```
+
+**6. Caching/Memoization**
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# Much faster with caching
+print(f"Fibonacci(30): {fibonacci(30)}")
+```
+
+**Output:**
+```
+Fibonacci(30): 832040
+```
+
+Decorators are fundamental in modern Python development, especially in web frameworks like **FastAPI** and **Flask** where they define routes, handle authentication, validate inputs, and manage dependencies. They provide a clean, readable way to add functionality without modifying the original function code.
 
 ---
 
