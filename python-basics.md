@@ -490,7 +490,6 @@ b = False
 print(f"a is {a}")
 print(f"b is {b}")
 print(f"10 > 5: {10 > 5}")
-print(f"5 == 10: {5 == 10}")
 print(f"bool(0): {bool(0)}")
 print(f"bool('text'): {bool('text')}")
 ```
@@ -728,9 +727,11 @@ print(f"After insert: {fruits}")
 fruits.remove("cherry")
 print(f"After remove: {fruits}")
 
+# Pop
 popped = fruits.pop()
 print(f"Popped: {popped}, Remaining: {fruits}")
 
+# Delete 
 del fruits[0]
 print(f"After del: {fruits}")
 ```
